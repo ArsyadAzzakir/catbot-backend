@@ -1,0 +1,41 @@
+// Konfigurasi Database
+// Untuk tahap development di laptop, kita gunakan "sqlite" agar Anda tidak perlu repot 
+// menginstal aplikasi server PostgreSQL yang berat. Nanti saat mau rilis, cukup ubah ke "postgresql".
+datasource db {
+  provider = "sqlite"
+  url      = "file:./catbot.db"
+}
+
+// Konfigurasi Client untuk Python
+generator client {
+  provider = "prisma-client-py"
+}
+
+// =========================================
+// TABEL 1: Data Pengguna (Untuk Login/Register)
+// =========================================
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // Kata sandi (nanti kita enkripsi)
+  createdAt DateTime @default(now())
+  
+  // Relasi: Satu user bisa punya banyak profil kucing
+  cats      CatProfile[]
+}
+
+// =========================================
+// TABEL 2: Profil Kucing
+// =========================================
+model CatProfile {
+  id        Int      @id @default(autoincrement())
+  name      String
+  breed     String
+  age       Int
+  
+  // Relasi balik ke User
+  userId    Int
+  owner     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+}
