@@ -2,8 +2,8 @@
 // Untuk tahap development di laptop, kita gunakan "sqlite" agar Anda tidak perlu repot 
 // menginstal aplikasi server PostgreSQL yang berat. Nanti saat mau rilis, cukup ubah ke "postgresql".
 datasource db {
-  provider = "sqlite"
-  url      = "file:./catbot.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // Konfigurasi Client untuk Python
@@ -15,25 +15,44 @@ generator client {
 // TABEL 1: Data Pengguna (Untuk Login/Register)
 // =========================================
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String   // Kata sandi (nanti kita enkripsi)
-  createdAt DateTime @default(now())
+  id        Int                @id @default(autoincrement())
+  email     String             @unique
+  password  String
+  createdAt DateTime           @default(now())
   
-  // Relasi: Satu user bisa punya banyak profil kucing
   cats      CatProfile[]
+  histories DiagnosisHistory[]
 }
 
 // =========================================
 // TABEL 2: Profil Kucing
 // =========================================
 model CatProfile {
-  id        Int      @id @default(autoincrement())
-  name      String
-  breed     String
-  age       Int
+  id          Int      @id @default(autoincrement())
+  name        String
+  breed       String
+  age         Int
   
+  // 3 Kolom tambahan untuk menyesuaikan layar UI Flutter
+  weight_kg   Float?   
+  vaccine     String?  
+  birthDate   String?  // Kita pakai String agar mudah ditampilkan di aplikasi
+
   // Relasi balik ke User
+  userId      Int
+  owner       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+}
+// =========================================
+// TABEL 3: Riwayat Diagnosa Kesehatan
+// =========================================
+model DiagnosisHistory {
+  id        Int      @id @default(autoincrement())
+  symptoms  String   // Daftar gejala dipisahkan koma
+  result    String   // Hasil diagnosa
+  advice    String   // Saran penanganan
+  
   userId    Int
   owner     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
